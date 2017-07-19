@@ -68,12 +68,13 @@ class LitleTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_successful_purchase_with_paypage_registration_with_month_year_verification
+  def test_successful_purchase_with_paypage_registration_with_month_year_verification_name
     paypage_registration = ActiveMerchant::Billing::LitlePaypageRegistration.new(
       'XkNDRGZDTGZyS2RBSTVCazJNSmdWam5TQ2gyTGhydFh0Mk5qZ0Z3cVp5VlNBN00rcGRZdHF6amFRWEttbVBnYw==',
       month: '11',
       year: '12',
-      verification_value: '123'
+      verification_value: '123',
+      name: 'Joe Payer'
     )
 
     response = stub_comms do
@@ -89,7 +90,7 @@ class LitleTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_successful_purchase_with_paypage_registration_without_month_year_verification
+  def test_successful_purchase_with_paypage_registration_without_month_year_verification_name
     paypage_registration = ActiveMerchant::Billing::LitlePaypageRegistration.new(
       'ZkNDRGZDTGZyS2RBSTVCazJNSmdWam5TQ2gyTGhydFh0Mk5qZ0Z3cVp5VlNBN00rcGRZdHF6amFRWEttbVBnYw=='
     )
@@ -227,12 +228,13 @@ class LitleTest < Test::Unit::TestCase
     assert_success capture
   end
 
-  def test_successful_authorize_with_paypage_registration_with_month_year_and_verification
+  def test_successful_authorize_with_paypage_registration_with_month_year_verification_name
     paypage_registration = ActiveMerchant::Billing::LitlePaypageRegistration.new(
       'XkNDRGZDTGZyS2RBSTVCazJNSmdWam5TQ2gyTGhydFh0Mk5qZ0Z3cVp5VlNBN00rcGRZdHF6amFRWEttbVBnYw==',
       month: '11',
       year: '12',
-      verification_value: '123'
+      verification_value: '123',
+      name: 'Joe Payer'
     )
 
     response = stub_comms do
@@ -248,7 +250,7 @@ class LitleTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_successful_authorize_with_paypage_registration_without_month_year_and_verification
+  def test_successful_authorize_with_paypage_registration_without_month_year_verification_name
     paypage_registration = ActiveMerchant::Billing::LitlePaypageRegistration.new(
       'XkNDRGZDTGZyS2RBSTVCazJNSmdWam5TQ2gyTGhydFh0Mk5qZ0Z3cVp5VlNBN00rcGRZdHF6amFRWEttbVBnYw==',
     )
