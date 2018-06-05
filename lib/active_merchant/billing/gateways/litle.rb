@@ -6,11 +6,7 @@ module ActiveMerchant #:nodoc:
     class LitleGateway < Gateway
       SCHEMA_VERSION = '9.14'
 
-<<<<<<< HEAD
       self.test_url = 'https://www.testvantivcnp.com/sandbox/communicator/online'
-=======
-      self.test_url = 'https://www.testlitle.com/sandbox/communicator/online'
->>>>>>> a76b300a... lp: update vantiv urls
       self.live_url = 'https://payments.vantivcnp.com/vap/communicator/online'
 
       self.supported_countries = ['US']
@@ -248,6 +244,8 @@ module ActiveMerchant #:nodoc:
         add_billing_address(doc, payment_method, options)
         add_payment_method(doc, payment_method, options)
         add_descriptor(doc, options)
+        add_processing_type(doc, options)
+        add_original_network_transaction(doc, options)
       end
 
       def add_descriptor(doc, options)
@@ -428,12 +426,21 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_processing_type(doc, options)
+        doc.processingType(options[:processing_type]) unless options[:processing_type].blank?
+      end
+
+      def add_original_network_transaction(doc, options)
+        doc.originalNetworkTransactionId(options[:original_network_transaction_id]) unless options[:original_network_transaction_id].blank?
+      end
+
       def exp_date(payment_method)
         "#{format(payment_method.month, :two_digits)}#{format(payment_method.year, :two_digits)}"
       end
 
       def parse(kind, xml)
         parsed = {}
+        p xml
 
         doc = Nokogiri::XML(xml).remove_namespaces!
         doc.xpath("//litleOnlineResponse/#{kind}Response/*").each do |node|
