@@ -265,6 +265,16 @@ module ActiveMerchant #:nodoc:
         if payment_method.is_a?(String)
           doc.token do
             doc.litleToken(payment_method)
+            if options[:month].present? && options[:year].present?
+              doc.expDate("#{options[:month]}#{options[:year]}")
+            end
+          end
+        elsif payment_method.respond_to?(:litle_token)
+          doc.token do
+            doc.litleToken(payment_method.litle_token)
+            if payment_method.try(:month) && payment_method.try(:year)
+              doc.expDate("#{payment_method.month}#{payment_method.year}")
+            end
           end
         elsif payment_method.respond_to?(:paypage_registration_id)
           doc.paypage do
