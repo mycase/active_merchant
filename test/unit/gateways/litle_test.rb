@@ -96,6 +96,14 @@ class LitleTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_passing_litle_token
+    stub_comms do
+      @gateway.purchase(@amount, '121212121212', month: '01', year: '20')
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r(<expDate>0120<), data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_passing_name_on_card
     stub_comms do
       @gateway.purchase(@amount, @credit_card)
