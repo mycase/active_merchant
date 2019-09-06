@@ -115,6 +115,10 @@ class LitleTest < Test::Unit::TestCase
       matcher = /\<processingType\>initialCOF\<\/processingType\>/
       assert_match(matcher, data)
     end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert_equal '100000000000000006;sale;100', response.authorization
+    assert response.test?
   end
 
   def test_failed_purchase
@@ -128,7 +132,6 @@ class LitleTest < Test::Unit::TestCase
     assert response.test?
   end
 
-<<<<<<< HEAD
   def test_passing_merchant_data
     options = @options.merge(
       affiliate: 'some-affiliate',
