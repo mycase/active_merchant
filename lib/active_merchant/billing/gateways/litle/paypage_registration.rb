@@ -13,7 +13,7 @@ module ActiveMerchant
     # The name parameter is allowed by Vantiv as a member of the billToAddress element.
     # It is passed in here to be consistent with the rest of the Litle gateway and Activemerchant.
     class LitlePaypageRegistration
-      attr_reader :paypage_registration_id, :month, :year, :verification_value, :name
+      attr_reader :paypage_registration_id, :month, :year, :verification_value, :name, :type
 
       def initialize(paypage_registration_id, options = {})
         @paypage_registration_id = paypage_registration_id
@@ -21,6 +21,7 @@ module ActiveMerchant
         @year = options[:year]
         @verification_value = options[:verification_value]
         @name = options[:name]
+        @type = options[:type]
       end
     end
   end
