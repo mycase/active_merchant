@@ -12,15 +12,15 @@ class SecureNetTest < Test::Unit::TestCase
 
     n = Time.now
     order_id = n.to_i.to_s + n.usec.to_s
-    @options = { 
-      :order_id => order_id,
-      :billing_address => address,
-      :description => 'Store Purchase'
+    @options = {
+      order_id: order_id,
+      billing_address: address,
+      description: 'Store Purchase'
     }
   end
 
   def test_expired_credit_card
-    @credit_card.year = 2004 
+    @credit_card.year = 2004
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert response.test?
@@ -97,7 +97,7 @@ class SecureNetTest < Test::Unit::TestCase
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @bad_card_number, @options)
     assert_failure response
-    assert_equal "CARD TYPE COULD NOT BE IDENTIFIED", response.message
+    assert_equal 'CARD TYPE COULD NOT BE IDENTIFIED', response.message
   end
 
   def test_unsuccessful_purchase_and_credit
@@ -109,6 +109,31 @@ class SecureNetTest < Test::Unit::TestCase
     assert refund = @gateway.refund(@amount, purchase.authorization)
     assert_failure refund
     assert_equal 'CREDIT CANNOT BE COMPLETED ON AN UNSETTLED TRANSACTION', refund.message
+  end
+
+  def test_invoice_description_and_number
+    options = @options.merge({
+      invoice_description: 'TheInvoiceDescriptions',
+      invoice_number: 'TheInvoiceNumber'
+    })
+
+    assert auth = @gateway.authorize(@amount, @credit_card, options)
+    assert_success auth
+
+    assert capture = @gateway.capture(@amount, auth.authorization, options)
+    assert_success capture
+    assert_equal 'Approved', capture.message
+  end
+
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
   end
 
 end

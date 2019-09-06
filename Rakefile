@@ -1,4 +1,5 @@
 $:.unshift File.expand_path('../lib', __FILE__)
+require 'active_merchant/version'
 
 begin
   require 'bundler'
@@ -10,52 +11,38 @@ end
 
 require 'rake'
 require 'rake/testtask'
-require 'rubygems/package_task'
+require 'rubocop/rake_task'
 require 'support/gateway_support'
 require 'support/ssl_verify'
+require 'support/ssl_version'
 require 'support/outbound_hosts'
+require 'bundler/gem_tasks'
 
-desc "Run the unit test suite"
+task :tag_release do
+  system "git tag 'v#{ActiveMerchant::VERSION}'"
+  system 'git push --tags'
+end
+
+desc 'Run the unit test suite'
 task :default => 'test:units'
-
 task :test => 'test:units'
 
-namespace :test do
+RuboCop::RakeTask.new
 
+namespace :test do
   Rake::TestTask.new(:units) do |t|
     t.pattern = 'test/unit/**/*_test.rb'
-    t.ruby_opts << '-rubygems'
     t.libs << 'test'
     t.verbose = true
   end
+
+  desc 'Run all tests that do not require network access'
+  task :local => ['test:units', 'rubocop']
 
   Rake::TestTask.new(:remote) do |t|
     t.pattern = 'test/remote/**/*_test.rb'
-    t.ruby_opts << '-rubygems'
     t.libs << 'test'
     t.verbose = true
-  end
-
-end
-
-desc "Delete tar.gz / zip"
-task :cleanup => [ :clobber_package ]
-
-spec = eval(File.read('activemerchant.gemspec'))
-
-Gem::PackageTask.new(spec) do |p|
-  p.gem_spec = spec
-  p.need_tar = true
-  p.need_zip = true
-end
-
-desc "Release the gems and docs to RubyForge"
-task :release => [ 'gemcutter:publish' ]
-
-namespace :gemcutter do
-  desc "Publish to gemcutter"
-  task :publish => :package do
-    sh "gem push pkg/activemerchant-#{ActiveMerchant::VERSION}.gem"
   end
 end
 
@@ -94,11 +81,30 @@ namespace :gateways do
 
   desc 'Print the list of destination hosts with port'
   task :hosts do
-    OutboundHosts.list
+    hosts, invalid_lines = OutboundHosts.list
+
+    hosts.each do |host|
+      puts host
+    end
+
+    unless invalid_lines.empty?
+      puts
+      puts 'Unable to parse:'
+      invalid_lines.each do |line|
+        puts line
+      end
+    end
   end
 
-  desc 'Test that gateways allow SSL verify_peer'
-  task :ssl_verify do
-    SSLVerify.new.test_gateways
+  namespace :ssl do
+    desc 'Test that gateways allow SSL verify_peer'
+    task :verify do
+      SSLVerify.new.test_gateways
+    end
+
+    desc 'Test gateways minimal SSL version connection'
+    task :min_version do
+      SSLVersion.new.test_gateways
+    end
   end
 end
