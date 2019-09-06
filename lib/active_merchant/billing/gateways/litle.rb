@@ -222,6 +222,8 @@ module ActiveMerchant #:nodoc:
         add_payment_method(doc, payment_method, options)
         add_pos(doc, payment_method)
         add_descriptor(doc, options)
+        add_processing_type(doc, options)
+        add_original_network_transaction(doc, options)
         add_merchant_data(doc, options)
         add_debt_repayment(doc, options)
         add_stored_credential_params(doc, options)
