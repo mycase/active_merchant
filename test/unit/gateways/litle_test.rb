@@ -149,9 +149,10 @@ class LitleTest < Test::Unit::TestCase
 
   def test_passing_litle_token
     stub_comms do
-      @gateway.purchase(@amount, '121212121212', month: '01', year: '20')
+      @gateway.purchase(@amount, '121212121212', month: '01', year: '20', name: 'Jason Voorhees')
     end.check_request do |endpoint, data, headers|
       assert_match(%r(<expDate>0120<), data)
+      assert_match(%r(<name>Jason Voorhees<), data)
     end.respond_with(successful_purchase_response)
   end
 
