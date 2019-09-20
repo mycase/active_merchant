@@ -352,13 +352,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_billing_address(doc, payment_method, options)
-        return if payment_method.is_a?(String)
-
         doc.billToAddress do
           if check?(payment_method)
             doc.name(payment_method.name)
             doc.firstName(payment_method.first_name)
             doc.lastName(payment_method.last_name)
+          elsif payment_method.is_a?(String)
+            doc.name(options[:name]) if options[:name].present?
           else
             doc.name(payment_method.name)
           end
