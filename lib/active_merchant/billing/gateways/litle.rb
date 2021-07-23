@@ -136,6 +136,16 @@ module ActiveMerchant #:nodoc:
         commit(:registerToken, request)
       end
 
+      def query_transaction(options={})
+        request = build_xml_request do |doc|
+          add_authentication(doc)
+          doc.queryTransaction(transaction_attributes(options)) do
+            add_query_transaction_params(doc, options)
+          end
+        end
+        commit(:queryTransaction, request)
+      end
+
       def supports_scrubbing?
         true
       end
@@ -402,6 +412,11 @@ module ActiveMerchant #:nodoc:
         else
           doc.orderSource('ecommerce')
         end
+      end
+
+      def add_query_transaction_params(doc, options)
+        doc.origId(truncate(options[:order_id], 24))
+        doc.origActionType(options[:action_type]) if options[:action_type]
       end
 
       def order_source(options={})
