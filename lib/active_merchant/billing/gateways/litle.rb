@@ -1,4 +1,5 @@
 require 'nokogiri'
+require 'active_merchant/billing/gateways/litle/paypage_registration'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -225,6 +226,8 @@ module ActiveMerchant #:nodoc:
         add_payment_method(doc, payment_method, options)
         add_pos(doc, payment_method)
         add_descriptor(doc, options)
+        add_processing_type(doc, options)
+        add_original_network_transaction(doc, options)
         add_merchant_data(doc, options)
         add_debt_repayment(doc, options)
         add_stored_credential_params(doc, options)
@@ -258,6 +261,8 @@ module ActiveMerchant #:nodoc:
         add_billing_address(doc, payment_method, options)
         add_payment_method(doc, payment_method, options)
         add_descriptor(doc, options)
+        add_processing_type(doc, options)
+        add_original_network_transaction(doc, options)
       end
 
       def add_descriptor(doc, options)
@@ -277,7 +282,26 @@ module ActiveMerchant #:nodoc:
         if payment_method.is_a?(String)
           doc.token do
             doc.litleToken(payment_method)
-            doc.expDate(format_exp_date(options[:basis_expiration_month], options[:basis_expiration_year])) if options[:basis_expiration_month] && options[:basis_expiration_year]
+            if options[:month].present? && options[:year].present?
+              doc.expDate("#{options[:month]}#{options[:year]}")
+            end
+          end
+        elsif payment_method.respond_to?(:litle_token)
+          doc.token do
+            doc.litleToken(payment_method.litle_token)
+            if payment_method.try(:month) && payment_method.try(:year)
+              doc.expDate("#{payment_method.month}#{payment_method.year}")
+            end
+          end
+        elsif payment_method.respond_to?(:paypage_registration_id)
+          doc.paypage do
+            doc.paypageRegistrationId(payment_method.paypage_registration_id)
+            if payment_method.try(:month) && payment_method.try(:year)
+              doc.expDate("#{payment_method.month}#{payment_method.year}")
+            end
+            if payment_method.try(:verification_value)
+              doc.cardValidationNum(payment_method.verification_value)
+            end
           end
         elsif payment_method.respond_to?(:track_data) && payment_method.track_data.present?
           doc.card do
@@ -343,13 +367,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_billing_address(doc, payment_method, options)
-        return if payment_method.is_a?(String)
-
         doc.billToAddress do
           if check?(payment_method)
             doc.name(payment_method.name)
             doc.firstName(payment_method.first_name)
             doc.lastName(payment_method.last_name)
+          elsif payment_method.is_a?(String)
+            doc.name(options[:name]) if options[:name].present?
           else
             doc.name(payment_method.name)
           end
@@ -428,6 +452,14 @@ module ActiveMerchant #:nodoc:
           doc.entryMode('completeread')
           doc.cardholderId('signature')
         end
+      end
+
+      def add_processing_type(doc, options)
+        doc.processingType(options[:processing_type]) unless options[:processing_type].blank?
+      end
+
+      def add_original_network_transaction(doc, options)
+        doc.originalNetworkTransactionId(options[:original_network_transaction_id]) unless options[:original_network_transaction_id].blank?
       end
 
       def exp_date(payment_method)

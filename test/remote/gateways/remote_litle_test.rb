@@ -132,6 +132,30 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
+  def test_successful_authorization_with_paypage_registration_with_month_year_verification
+    paypage_registration = ActiveMerchant::Billing::LitlePaypageRegistration.new(
+      'XkNDRGZDTGZyS2RBSTVCazJNSmdWam5TQ2gyTGhydFh0Mk5qZ0Z3cVp5VlNBN00rcGRZdHF6amFRWEttbVBnYw==',
+      month: '11',
+      year: '12',
+      verification_value: '123',
+      name: 'Joe Payer'
+    )
+
+    assert response = @gateway.authorize(5090, paypage_registration, billing_address: address)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_authorization_with_paypage_registration_without_month_year_verification_name
+    paypage_registration = ActiveMerchant::Billing::LitlePaypageRegistration.new(
+      'XkNDRGZDTGZyS2RBSTVCazJNSmdWam5TQ2gyTGhydFh0Mk5qZ0Z3cVp5VlNBN00rcGRZdHF6amFRWEttbVBnYw=='
+    )
+
+    assert response = @gateway.authorize(5090, paypage_registration, billing_address: address)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
   def test_avs_and_cvv_result
     assert response = @gateway.authorize(10010, @credit_card1, @options)
     assert_equal 'X', response.avs_result['code']
@@ -218,6 +242,20 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
+  def test_successful_purchase_with_paypage_registration_with_month_year_verification
+    paypage_registration = ActiveMerchant::Billing::LitlePaypageRegistration.new(
+      'XkNDRGZDTGZyS2RBSTVCazJNSmdWam5TQ2gyTGhydFh0Mk5qZ0Z3cVp5VlNBN00rcGRZdHF6amFRWEttbVBnYw==',
+      month: '11',
+      year: '12',
+      verification_value: '123',
+      name: 'Joe Payer'
+    )
+
+    assert response = @gateway.purchase(5090, paypage_registration, billing_address: address)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
   def test_successful_purchase_with_merchant_data
     options = @options.merge(
       affiliate: 'some-affiliate',
@@ -235,6 +273,16 @@ class RemoteLitleTest < Test::Unit::TestCase
       order_source: 'telephone'
     })
     assert response = @gateway.purchase(2004, @check, options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_paypage_registration_without_month_year_verification
+    paypage_registration = ActiveMerchant::Billing::LitlePaypageRegistration.new(
+      'XkNDRGZDTGZyS2RBSTVCazJNSmdWam5TQ2gyTGhydFh0Mk5qZ0Z3cVp5VlNBN00rcGRZdHF6amFRWEttbVBnYw=='
+    )
+
+    assert response = @gateway.purchase(5090, paypage_registration, billing_address: address)
     assert_success response
     assert_equal 'Approved', response.message
   end
