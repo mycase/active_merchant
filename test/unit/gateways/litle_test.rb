@@ -181,6 +181,121 @@ class LitleTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_passing_level_2_data_with_sales_tax_0_for_visa
+    options = @options.merge(
+      level_2_data: {
+        sales_tax: 0
+      }
+    )
+    credit_card = CreditCard.new(
+      first_name: 'John',
+      last_name: 'Smith',
+      month: '01',
+      year: '2028',
+      brand: 'visa',
+      number: '4111111111111111',
+      verification_value: '349'
+    )
+    stub_comms do
+      @gateway.purchase(@amount, credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(%r(<taxExempt>true</taxExempt>), data)
+      assert_match(%r(<salesTax>0</salesTax>), data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_passing_level_2_data_with_sales_tax_0_for_mastercard
+    options = @options.merge(
+      level_2_data: {
+        total_tax_amount: 0
+      }
+    )
+    credit_card = CreditCard.new(
+      first_name: 'John',
+      last_name: 'Smith',
+      month: '01',
+      year: '2028',
+      brand: 'master',
+      number: '5555555555554444',
+      verification_value: '349'
+    )
+    stub_comms do
+      @gateway.purchase(@amount, credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(%r(<taxExempt>true</taxExempt>), data)
+      assert_match(%r(<salesTax>0</salesTax>), data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_passing_level_3_data_for_mastercard
+    options = @options.merge(
+      level_3_data: {
+        total_tax_amount: 0,
+        line_items: [{
+          product_code: 'test',
+          item_description: 'Legal services',
+          quantity: 1,
+          unit_of_measure: 'EA',
+          line_item_total: 500
+        }]
+      }
+    )
+    credit_card = CreditCard.new(
+      first_name: 'John',
+      last_name: 'Smith',
+      month: '01',
+      year: '2024',
+      brand: 'master',
+      number: '5555555555554444',
+      verification_value: '349'
+    )
+    stub_comms do
+      @gateway.purchase(@amount, credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(%r(<taxExempt>true</taxExempt>), data)
+      assert_match(%r(<salesTax>0</salesTax>), data)
+      assert_match(%r(<quantity>1</quantity>), data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_passing_level_3_data_for_visa
+    options = @options.merge(
+      level_3_data: {
+        discount_amount: 0,
+        shipping_amount: 0,
+        duty_amount: 0,
+        total_tax_amount: 0,
+        line_items: [{
+          item_sequence_number: 1,
+          commodity_code: 'Comm',
+          product_code: 'test',
+          item_description: 'Legal services',
+          quantity: 1,
+          unit_of_measure: 'EA',
+          discount_per_line_item: 0,
+          unit_cost: 500,
+          line_item_total: 500
+        }]
+      }
+    )
+    credit_card = CreditCard.new(
+      first_name: 'John',
+      last_name: 'Smith',
+      month: '01',
+      year: '2028',
+      brand: 'visa',
+      number: '4111111111111111',
+      verification_value: '349'
+    )
+    stub_comms do
+      @gateway.purchase(@amount, credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(%r(<quantity>1</quantity>), data)
+      assert_match(%r(<commodityCode>Comm</commodityCode>), data)
+      assert_match(%r(<itemSequenceNumber>1</itemSequenceNumber>), data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_passing_litle_token
     stub_comms do
       @gateway.purchase(@amount, '121212121212', month: '01', year: '20', name: 'Jason Voorhees')
