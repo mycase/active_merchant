@@ -1,5 +1,6 @@
 require 'nokogiri'
 require 'active_merchant/billing/gateways/litle/paypage_registration'
+require 'active_merchant/billing/gateways/litle/token'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -47,11 +48,11 @@ module ActiveMerchant #:nodoc:
             case payment_method.brand
             when 'visa'
               doc.salesTax(level_2_data[:sales_tax]) if level_2_data[:sales_tax]
-              doc.taxExempt(true) if level_2_data[:sales_tax] == 0
+              doc.taxExempt(true) if level_2_data[:sales_tax].to_i == 0
             when 'master'
               doc.customerReference(level_2_data[:customer_code]) if level_2_data[:customer_code]
               doc.salesTax(level_2_data[:total_tax_amount]) if level_2_data[:total_tax_amount]
-              doc.taxExempt(true) if level_2_data[:total_tax_amount] == 0
+              doc.taxExempt(true) if level_2_data[:total_tax_amount].to_i == 0
               doc.detailTax do
                 doc.taxIncludedInTotal(level_2_data[:tax_included_in_total]) if level_2_data[:tax_included_in_total]
                 doc.taxAmount(level_2_data[:tax_amount]) if level_2_data[:tax_amount]
@@ -93,7 +94,7 @@ module ActiveMerchant #:nodoc:
       def add_level_three_information_tags_master(doc, payment_method, level_3_data)
         doc.customerReference :customerReference, level_3_data[:customer_code] if level_3_data[:customer_code]
         doc.salesTax(level_3_data[:total_tax_amount]) if level_3_data[:total_tax_amount]
-        doc.taxExempt(true) if level_3_data[:total_tax_amount] == 0
+        doc.taxExempt(true) if level_3_data[:total_tax_amount].to_i == 0
         doc.detailTax do
           doc.taxIncludedInTotal(level_3_data[:tax_included_in_total]) if level_3_data[:tax_included_in_total]
           doc.taxAmount(level_3_data[:tax_amount]) if level_3_data[:tax_amount]
@@ -120,9 +121,9 @@ module ActiveMerchant #:nodoc:
             doc.unitOfMeasure(line_item[:unit_of_measure]) if line_item[:unit_of_measure]
             doc.taxAmount(line_item[:tax_amount]) if line_item[:tax_amount]
             doc.lineItemTotal(line_item[:line_item_total]) if line_item[:line_item_total]
-            doc.itemDiscountAmount(line_item[:discount_per_line_item]) unless line_item[:discount_per_line_item]
+            doc.itemDiscountAmount(line_item[:discount_per_line_item]) if line_item[:discount_per_line_item]
             doc.commodityCode(line_item[:commodity_code]) if line_item[:commodity_code]
-            doc.unitCost(line_item[:unit_cost]) unless line_item[:unit_cost]
+            doc.unitCost(line_item[:unit_cost]) if line_item[:unit_cost]
             doc.detailTax do
               doc.taxIncludedInTotal(line_item[:tax_included_in_total]) if line_item[:tax_included_in_total]
               doc.taxAmount(line_item[:tax_amount]) if line_item[:tax_amount]
