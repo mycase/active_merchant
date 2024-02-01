@@ -264,7 +264,7 @@ class LitleTest < Test::Unit::TestCase
         discount_amount: 0,
         shipping_amount: 0,
         duty_amount: 0,
-        total_tax_amount: 0,
+        tax_amount: 0,
         line_items: [{
           item_sequence_number: 1,
           commodity_code: 'Comm',
@@ -293,6 +293,40 @@ class LitleTest < Test::Unit::TestCase
       assert_match(%r(<quantity>1</quantity>), data)
       assert_match(%r(<commodityCode>Comm</commodityCode>), data)
       assert_match(%r(<itemSequenceNumber>1</itemSequenceNumber>), data)
+      assert_match(%r(<taxAmount>0</taxAmount>), data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_passing_with_litle_token_of_level_3_rates
+    litle_token = ActiveMerchant::Billing::LitleToken.new(
+      'XkNDRGZDTGZyS2RBSTVCazJNSmdWam5T',
+      brand: 'visa',
+      name: 'Joe Payer'
+    )
+    options = @options.merge(
+      level_3_data: {
+        discount_amount: 0,
+        shipping_amount: 0,
+        duty_amount: 0,
+        tax_amount: 0,
+        line_items: [{
+          item_sequence_number: 1,
+          commodity_code: 'Comm',
+          product_code: 'test',
+          item_description: 'Legal services',
+          quantity: 1,
+          unit_of_measure: 'EA',
+          discount_per_line_item: 0,
+          unit_cost: 500,
+          line_item_total: 500
+        }]
+      }
+    )
+    stub_comms do
+      @gateway.purchase(@amount, litle_token, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(%r(<unitCost>500</unitCost>), data)
+      assert_match(%r(<taxAmount>0</taxAmount>), data)
     end.respond_with(successful_purchase_response)
   end
 

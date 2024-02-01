@@ -1,5 +1,6 @@
 require 'nokogiri'
 require 'active_merchant/billing/gateways/litle/paypage_registration'
+require 'active_merchant/billing/gateways/litle/token'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -114,15 +115,15 @@ module ActiveMerchant #:nodoc:
         doc.lineItemData do
           level_3_data[:line_items].each do |line_item|
             doc.itemSequenceNumber(line_item[:item_sequence_number]) if line_item[:item_sequence_number]
-            doc.commodityCode(line_item[:commodity_code]) if line_item[:commodity_code]
             doc.itemDescription(line_item[:item_description]) if line_item[:item_description]
             doc.productCode(line_item[:product_code]) if line_item[:product_code]
             doc.quantity(line_item[:quantity]) if line_item[:quantity]
             doc.unitOfMeasure(line_item[:unit_of_measure]) if line_item[:unit_of_measure]
             doc.taxAmount(line_item[:tax_amount]) if line_item[:tax_amount]
-            doc.itemDiscountAmount(line_item[:discount_per_line_item]) unless line_item[:discount_per_line_item] < 0
-            doc.unitCost(line_item[:unit_cost]) unless line_item[:unit_cost] < 0
             doc.lineItemTotal(line_item[:line_item_total]) if line_item[:line_item_total]
+            doc.itemDiscountAmount(line_item[:discount_per_line_item]) if line_item[:discount_per_line_item]
+            doc.commodityCode(line_item[:commodity_code]) if line_item[:commodity_code]
+            doc.unitCost(line_item[:unit_cost]) if line_item[:unit_cost]
             doc.detailTax do
               doc.taxIncludedInTotal(line_item[:tax_included_in_total]) if line_item[:tax_included_in_total]
               doc.taxAmount(line_item[:tax_amount]) if line_item[:tax_amount]
@@ -320,10 +321,10 @@ module ActiveMerchant #:nodoc:
         add_payment_method(doc, payment_method, options)
         add_pos(doc, payment_method)
         add_descriptor(doc, options)
-        add_processing_type(doc, options)
-        add_original_network_transaction(doc, options)
         add_level_two_data(doc, payment_method, options)
         add_level_three_data(doc, payment_method, options)
+        add_processing_type(doc, options)
+        add_original_network_transaction(doc, options)
         add_merchant_data(doc, options)
         add_debt_repayment(doc, options)
         add_stored_credential_params(doc, options)
