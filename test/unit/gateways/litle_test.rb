@@ -301,7 +301,9 @@ class LitleTest < Test::Unit::TestCase
     litle_token = ActiveMerchant::Billing::LitleToken.new(
       'XkNDRGZDTGZyS2RBSTVCazJNSmdWam5T',
       brand: 'visa',
-      name: 'Joe Payer'
+      name: 'Joe Payer',
+      month: '12',
+      year: '46'
     )
     options = @options.merge(
       level_3_data: {
@@ -327,6 +329,39 @@ class LitleTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       assert_match(%r(<unitCost>500</unitCost>), data)
       assert_match(%r(<taxAmount>0</taxAmount>), data)
+      assert_match(%r(<expDate>1246</expDate>), data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_passing_level_3_rates_with_customer_data
+    options = @options.merge(
+      level_3_data: {
+        customer_code: 'fake_order_number',
+        card_acceptor_tax_id: 'mycase_tax_id',
+        total_tax_amount: 0,
+        line_items: [{
+          product_code: 'test',
+          item_description: 'Legal services',
+          quantity: 1,
+          unit_of_measure: 'EA',
+          line_item_total: 500
+        }]
+      }
+    )
+    credit_card = CreditCard.new(
+      first_name: 'John',
+      last_name: 'Smith',
+      month: '01',
+      year: '2024',
+      brand: 'master',
+      number: '5555555555554444',
+      verification_value: '349'
+    )
+    stub_comms do
+      @gateway.purchase(@amount, credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(%r(<customerReference>fake_order_number</customerReference>), data)
+      assert_match(%r(<cardAcceptorTaxId>mycase_tax_id</cardAcceptorTaxId>), data)
     end.respond_with(successful_purchase_response)
   end
 
